@@ -129,3 +129,16 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True
+
+CELERY_BEAT_SCHEDULE = {
+    "run-siem-every-5-seconds": {
+        "task": "logs.tasks.run_detection_engine",
+        "schedule": 5.0,
+    }
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+}

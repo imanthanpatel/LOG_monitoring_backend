@@ -18,3 +18,11 @@ class Alert(models.Model):
 
     def __str__(self):
         return self.rule_name
+
+
+class DetectionState(models.Model):
+    rule_name = models.CharField(max_length=100, unique=True)
+    last_processed_id = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.rule_name
