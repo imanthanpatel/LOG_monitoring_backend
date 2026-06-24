@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'logs',
+    "siem_engine"
+    "channels",
     'corsheaders'
 ]
 
@@ -142,3 +144,5 @@ REST_FRAMEWORK = {
         'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
+
+ASGI_APPLICATION = "project.asgi.application"
