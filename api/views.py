@@ -1,3 +1,2 @@
-from django.shortcuts import render
-
-# Create your views here.
+from ingestion.models import Log
+from alerts.models import Alert, Incident
