@@ -23,3 +23,16 @@ It simulates a real-world SOC (Security Operations Center) pipeline by:
 ---
 
 ## 🏗️ Architecture
+📥 Log Sources
+          ↓
+🚀 Ingestion API (Django REST)
+          ↓
+🗄️ Log Database
+          ↓
+🧠 Detection Engine (Rule-Based System)
+          ↓
+🧩 MITRE ATT&CK Mapping
+          ↓
+🚨 Alert & Incident System
+          ↓
+📊 API / Dashboard
