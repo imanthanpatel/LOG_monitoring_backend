@@ -1,3 +1,5 @@
 from django.contrib import admin
+from ingestion.models import Log, DetectionState
 
-# Register your models here.
+admin.site.register(Log)
+admin.site.register(DetectionState)
