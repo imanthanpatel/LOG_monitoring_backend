@@ -7,6 +7,19 @@ from detection.utils import (
     extract_ip,
 )
 
+from detection.models import MitreTechnique
+
+def resolve_mitre(mitre_code):
+    obj = MitreTechnique.objects.filter(
+        technique_id__iexact=mitre_code
+    ).first()
+
+    if not obj:
+        obj = MitreTechnique.objects.filter(
+            name__icontains=mitre_code
+        ).first()
+
+    return obj.technique_id if obj else None
 
 
 
@@ -22,30 +35,16 @@ def rdp_login():
 
     state = get_state("RDP Login")
 
-    new_logs = Log.objects.filter(
-        id__gt=state.last_processed_id
-    )
-
+    new_logs = Log.objects.filter(id__gt=state.last_processed_id)
     if not new_logs.exists():
         return
 
-    # Logon Type 10 = RemoteInteractive (RDP)
-    # Message contains "10" as logon type in inserts
-    matched = new_logs.filter(
-        event_id=4624,
-        message__contains="10"
-    )
-
-    for log in matched:
+    for log in new_logs.filter(event_id=4624, message__contains="10"):
         create_alert(
             rule_name="RDP Login",
             severity="Medium",
-            description=(
-                f"RDP login detected on {log.computer}. "
-                f"User: {log.username or 'Unknown'}. "
-                f"Source IP: {log.ip_address or 'Unknown'}"
-            ),
-            mitre="T1021.001"
+            description=f"RDP login: {log.username}",
+            mitre=resolve_mitre("T1021.001")
         )
 
     advance_state(state, new_logs)
@@ -63,34 +62,21 @@ def off_hours_login():
 
     state = get_state("Off Hours Login")
 
-    new_logs = Log.objects.filter(
-        id__gt=state.last_processed_id
-    )
-
+    new_logs = Log.objects.filter(id__gt=state.last_processed_id)
     if not new_logs.exists():
         return
 
-    matched = new_logs.filter(event_id=4624)
+    for log in new_logs.filter(event_id=4624):
 
-    for log in matched:
+        if log.time_generated:
+            hour = log.time_generated.hour
 
-        if not log.time_generated:
-            continue
-
-        hour = log.time_generated.hour
-
-        if hour >= 22 or hour < 6:
-
-            create_alert(
-                rule_name="Off Hours Login",
-                severity="Medium",
-                description=(
-                    f"Login detected outside business hours on {log.computer}. "
-                    f"User: {log.username or 'Unknown'}. "
-                    f"Time (UTC): {log.time_generated}. "
-                    f"IP: {log.ip_address or 'Unknown'}"
-                ),
-                mitre="T1078"
-            )
+            if hour >= 22 or hour < 6:
+                create_alert(
+                    rule_name="Off Hours Login",
+                    severity="Medium",
+                    description=f"Off-hours login by {log.username}",
+                    mitre=resolve_mitre("T1078")
+                )
 
     advance_state(state, new_logs)

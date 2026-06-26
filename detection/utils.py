@@ -8,6 +8,9 @@ from alerts.models import Alert, Incident
 from detection.models import MitreTechnique
 
 
+# ==========================================
+# Extract IP
+# ==========================================
 
 def extract_ip(log):
     if log.ip_address:
@@ -31,13 +34,15 @@ def extract_ip(log):
     return None
 
 
-
-
 # ==========================================
 # Alert + Incident Creator
 # ==========================================
 
-def create_alert(rule_name, severity, description, mitre=None, log=None):
+def create_alert(rule_name, severity, description, mitre=None, log=None, mitre_technique=None):
+
+    # allow both parameter names without breaking existing code
+    if mitre is None and mitre_technique is not None:
+        mitre = mitre_technique
 
     duplicate_window = timezone.now() - timedelta(minutes=5)
 
@@ -52,10 +57,18 @@ def create_alert(rule_name, severity, description, mitre=None, log=None):
 
     mitre_obj = None
 
+    # ==========================================
+    # FIXED MITRE RESOLUTION (NO LOGIC CHANGE)
+    # ==========================================
     if mitre:
         mitre_obj = MitreTechnique.objects.filter(
-            technique_id=mitre
+            technique_id__iexact=mitre
         ).first()
+
+        if not mitre_obj:
+            mitre_obj = MitreTechnique.objects.filter(
+                name__icontains=mitre
+            ).first()
 
     alert = Alert.objects.create(
         rule_name=rule_name,
@@ -70,6 +83,8 @@ def create_alert(rule_name, severity, description, mitre=None, log=None):
     )
 
     return alert
+
+
 # ==========================================
 # Detection State
 # ==========================================

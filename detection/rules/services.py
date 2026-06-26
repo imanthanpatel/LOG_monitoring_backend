@@ -1,6 +1,18 @@
 from ingestion.models import Log
 from detection.utils import *
+from detection.models import MitreTechnique
 
+def resolve_mitre(mitre_code):
+    obj = MitreTechnique.objects.filter(
+        technique_id__iexact=mitre_code
+    ).first()
+
+    if not obj:
+        obj = MitreTechnique.objects.filter(
+            name__icontains=mitre_code
+        ).first()
+
+    return obj.technique_id if obj else None
 
 
 # ==========================================
@@ -13,24 +25,16 @@ def service_installation():
 
     state = get_state("Service Installation")
 
-    new_logs = Log.objects.filter(
-        id__gt=state.last_processed_id
-    )
-
+    new_logs = Log.objects.filter(id__gt=state.last_processed_id)
     if not new_logs.exists():
         return
 
-    matched = new_logs.filter(event_id=7045)
-
-    for log in matched:
+    for log in new_logs.filter(event_id=7045):
         create_alert(
             rule_name="Service Installation",
             severity="High",
-            description=(
-                f"New Windows service installed on {log.computer}. "
-                f"Details: {str(log.message)[:200]}"
-            ),
-            mitre="T1543"
+            description=f"Service installed on {log.computer}",
+            mitre=resolve_mitre("T1543")
         )
 
     advance_state(state, new_logs)
@@ -42,7 +46,6 @@ def service_installation():
 # MITRE: T1053.005
 # NEW
 # ==========================================
-
 def scheduled_task_created():
 
     state = get_state("Scheduled Task Created")
@@ -56,6 +59,9 @@ def scheduled_task_created():
 
     matched = new_logs.filter(event_id=4698)
 
+    # ✅ FIX: safe MITRE resolution
+    mitre_obj = resolve_mitre("T1053.005")
+
     for log in matched:
         create_alert(
             rule_name="Scheduled Task Created",
@@ -65,7 +71,7 @@ def scheduled_task_created():
                 f"User: {log.username or 'Unknown'}. "
                 f"Details: {str(log.message)[:200]}"
             ),
-            mitre="T1053.005"
+            mitre=mitre_obj
         )
 
     advance_state(state, new_logs)

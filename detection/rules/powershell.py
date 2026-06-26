@@ -1,11 +1,10 @@
 from ingestion.models import Log
 from detection.utils import *
+from detection.models import MitreTechnique
 
 
 # ==========================================
 # RULE 3: PowerShell Execution
-# Event ID: 4104
-# MITRE: T1059.001
 # ==========================================
 
 def powershell_execution():
@@ -21,6 +20,16 @@ def powershell_execution():
 
     matched = new_logs.filter(event_id=4104)
 
+    # FIX: safe MITRE resolution
+    mitre_obj = MitreTechnique.objects.filter(
+        technique_id__iexact="T1059.001"
+    ).first()
+
+    if not mitre_obj:
+        mitre_obj = MitreTechnique.objects.filter(
+            name__icontains="powershell"
+        ).first()
+
     for log in matched:
         create_alert(
             rule_name="PowerShell Execution",
@@ -29,7 +38,7 @@ def powershell_execution():
                 f"PowerShell script block executed on {log.computer}. "
                 f"Preview: {str(log.message)[:200]}"
             ),
-            mitre="T1059.001"
+            mitre=mitre_obj.technique_id if mitre_obj else None
         )
 
     advance_state(state, new_logs)
@@ -37,10 +46,6 @@ def powershell_execution():
 
 # ==========================================
 # RULE 4: Suspicious PowerShell Keywords
-# Event ID: 4104
-# MITRE: T1059.001
-# NEW: Flags encoded commands, downloads,
-# credential dumping patterns.
 # ==========================================
 
 SUSPICIOUS_PS_KEYWORDS = [
@@ -60,6 +65,7 @@ SUSPICIOUS_PS_KEYWORDS = [
     "frombase64string",
 ]
 
+
 def suspicious_powershell():
 
     state = get_state("Suspicious PowerShell")
@@ -72,6 +78,16 @@ def suspicious_powershell():
         return
 
     matched = new_logs.filter(event_id=4104)
+
+    # FIX: safe MITRE resolution
+    mitre_obj = MitreTechnique.objects.filter(
+        technique_id__iexact="T1059.001"
+    ).first()
+
+    if not mitre_obj:
+        mitre_obj = MitreTechnique.objects.filter(
+            name__icontains="powershell"
+        ).first()
 
     for log in matched:
         msg = (log.message or "").lower()
@@ -86,7 +102,7 @@ def suspicious_powershell():
                     f"Keywords matched: {', '.join(hits)}. "
                     f"Preview: {str(log.message)[:300]}"
                 ),
-                mitre="T1059.001"
+                mitre=mitre_obj.technique_id if mitre_obj else None
             )
 
     advance_state(state, new_logs)

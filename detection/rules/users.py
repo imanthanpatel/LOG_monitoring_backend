@@ -1,6 +1,18 @@
 from ingestion.models import Log
 from detection.utils import *
+from detection.models import MitreTechnique
 
+def resolve_mitre(mitre_code):
+    obj = MitreTechnique.objects.filter(
+        technique_id__iexact=mitre_code
+    ).first()
+
+    if not obj:
+        obj = MitreTechnique.objects.filter(
+            name__icontains=mitre_code
+        ).first()
+
+    return obj.technique_id if obj else None
 
 
 # ==========================================
@@ -13,24 +25,16 @@ def new_user_creation():
 
     state = get_state("New User Creation")
 
-    new_logs = Log.objects.filter(
-        id__gt=state.last_processed_id
-    )
-
+    new_logs = Log.objects.filter(id__gt=state.last_processed_id)
     if not new_logs.exists():
         return
 
-    matched = new_logs.filter(event_id=4720)
-
-    for log in matched:
+    for log in new_logs.filter(event_id=4720):
         create_alert(
             rule_name="New User Creation",
             severity="Medium",
-            description=(
-                f"New user account created on {log.computer}. "
-                f"Username: {log.username or 'Unknown'}"
-            ),
-            mitre="T1136"
+            description=f"User created: {log.username}",
+            mitre=resolve_mitre("T1136")
         )
 
     advance_state(state, new_logs)
@@ -46,24 +50,16 @@ def deleting_user():
 
     state = get_state("User Deleted")
 
-    new_logs = Log.objects.filter(
-        id__gt=state.last_processed_id
-    )
-
+    new_logs = Log.objects.filter(id__gt=state.last_processed_id)
     if not new_logs.exists():
         return
 
-    matched = new_logs.filter(event_id=4726)
-
-    for log in matched:
+    for log in new_logs.filter(event_id=4726):
         create_alert(
             rule_name="User Deleted",
             severity="High",
-            description=(
-                f"User account deleted on {log.computer}. "
-                f"Username: {log.username or 'Unknown'}"
-            ),
-            mitre="T1531"
+            description=f"User deleted: {log.username}",
+            mitre=resolve_mitre("T1531")
         )
 
     advance_state(state, new_logs)

@@ -1,5 +1,18 @@
 from ingestion.models import Log
 from detection.utils import *
+from detection.models import MitreTechnique
+
+def resolve_mitre(mitre_code):
+    obj = MitreTechnique.objects.filter(
+        technique_id__iexact=mitre_code
+    ).first()
+
+    if not obj:
+        obj = MitreTechnique.objects.filter(
+            name__icontains=mitre_code
+        ).first()
+
+    return obj.technique_id if obj else None
 
 
 
