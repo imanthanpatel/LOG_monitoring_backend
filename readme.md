@@ -151,17 +151,111 @@ python -m venv venv
 source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate     # Windows
 ```
-
 ### 3️⃣ Install Dependencies
+```
 pip install -r requirements.txt
-
 ```
 ### 4️⃣ Run Migrations
+```
 python manage.py migrate
-
-5️⃣ Start Server
+```
+### 5️⃣ Start Server
+```
 python manage.py runserver
 ```
+### 6️⃣ Run Detection Engine
+```
+python manage.py run_detection
+```
+### 🧪 Testing Attack Simulation(This project includes a built-in attack simulator.)
+```
+python test\test_siem.py
 
----
+This script simulates:
+
+Brute force attacks
+PowerShell exploitation
+Suspicious process execution
+Privilege escalation attempts
+Persistence mechanisms
+```
+
+
+### 📊 Example Alert Output
+```
+{
+  "id": 24,
+  "rule_name": "Brute Force Detection",
+  "severity": "High",
+  "description": "12 failed logins in 5 minutes. Targets: admin",
+  "mitre_technique": {
+    "technique_id": "T1110",
+    "name": "Brute Force"
+  },
+  "timestamp": "2026-06-26T10:00:00Z"
+}
+```
+### 🧰 Tech Stac
+```
+| Layer          | Technology                  |
+| -------------- | --------------------------- |
+| Backend        | Django                      |
+| API Layer      | Django REST Framework       |
+| Database       | SQLite / PostgreSQL         |
+| Language       | Python                      |
+| Security Model | MITRE ATT&CK Framework      |
+| Architecture   | Rule-based Detection Engine |
+
+```
+### 🎯Real-World Use Cases
+```
+SOC analyst training simulation
+Cybersecurity lab environment
+MITRE ATT&CK learning platform
+SIEM architecture education
+Blue-team detection engineering practice
+
+```
+### 🚀 Future Roadmap
+```
+🔴 Real-time streaming detection (Kafka/WebSockets)
+🤖 AI-based anomaly detection engine
+📊 SOC dashboard (React / Next.js)
+🔗 Attack chain correlation (Kill-chain analysis)
+🌐 Threat intelligence feed integration
+📡 ELK stack integration
+
+```
+### 👨‍💻 Author
+```
+Manthan Patel
+
+```
+### ⭐ Support This Project
+```
+If you find this project useful:
+
+⭐ Star the repository
+🍴 Fork it
+🧠 Contribute new detection rules
+🚀 Improve MITRE coverage
+
+```
+### ⚠️ Disclaimer
+```
+This project is built for educational and research purposes only.
+
+It is NOT intended for production enterprise security monitoring.
+```
+
+
+
+
+
+
+
+
+
+
+
 
