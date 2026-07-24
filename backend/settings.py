@@ -33,11 +33,12 @@ INSTALLED_APPS = [
     # Third Party Apps
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "channels",
 
     # Local Apps
-    "accounts",
+    "accounts.apps.AccountsConfig",
     "ingestion",
     "alerts",
     "detection",
@@ -162,12 +163,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
 
-    # JWT Authentication
-    "DEFAULT_AUTHENTICATION_CLASSES": (
+   "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 
-    # Every API requires login
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
@@ -191,7 +190,7 @@ SIMPLE_JWT = {
 
     "ROTATE_REFRESH_TOKENS": True,
 
-    "BLACKLIST_AFTER_ROTATION": False,
+    "BLACKLIST_AFTER_ROTATION": True,
 
     "UPDATE_LAST_LOGIN": True,
 

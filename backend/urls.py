@@ -22,5 +22,6 @@ urlpatterns = [
     path("api/", include("alerts.urls")),
     path('api/', include('ingestion.urls')),
     path("api/", include("detection.urls")),
+    path("api/auth/", include("accounts.urls")),
 
 ]
