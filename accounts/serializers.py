@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from .models import UserProfile
+
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -54,7 +56,31 @@ class CurrentUserSerilizer(serializers.Serializer):
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
- 
+    
+class UserListSerializer(serializers.ModelSerializer):
+
+
+    role = serializers.CharField(source="profile.role")
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "role"]
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+
+
+    class Meta:
+        model = UserProfile
+        fields = ["role"]
+
+     
+
+
+
+
+
+
+
 
 
 

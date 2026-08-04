@@ -9,6 +9,9 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from ingestion.models import Log
+from detection.models import RuleConfig
+from django.contrib.auth.models import User
+ 
 
 
 
@@ -19,9 +22,17 @@ class IncidentListView(ListAPIView):
 
 class DashboardView(APIView):
     def get(self, request):
+        print("Reached Dashboard View")
         return Response({
             "total_logs": Log.objects.count(),
             "total_alerts": Alert.objects.count(),
+            "active_rules": RuleConfig.objects.filter(enabled=True).count(),
+            "total_incidents": Incident.objects.count(),
+            "critical_alerts": Alert.objects.filter(severity="Critical").count(),
+            "high_alerts": Alert.objects.filter(severity="High").count(),
+            "medium_alerts": Alert.objects.filter(severity="Medium").count(),
+            "low_alerts": Alert.objects.filter(severity="Low").count(),
+            "total_users": User.objects.count(),
             "failed_logins": Log.objects.filter(event_id=4625).count(),
         })
     

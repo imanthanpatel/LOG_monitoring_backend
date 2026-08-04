@@ -2,10 +2,14 @@ from django.shortcuts import render
 from .models import UserProfile
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import RegisterSerializer,LoginSerializer,CurrentUserSerilizer,LogoutSerializer
+from .serializers import RegisterSerializer,LoginSerializer,CurrentUserSerilizer,LogoutSerializer,UserListSerializer,UpdateUserSerializer
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.models import User
+from .permissions import IsAdmin,IsSOC,IsInvestigator,IsViewer,IsAdminOrSOC
+from django.shortcuts import get_object_or_404
 
 
 # Create your views here.
@@ -100,13 +104,79 @@ class Logout(APIView):
                     status=status.HTTP_200_OK
                 )
 
-            except Exception:
+            except Exception as e:
+                    print("========== ERROR ==========")
+                    print(type(e))
+                    print(e)
+                    print("===========================")
 
-                return Response(
-                    {
-                        "error": "Invalid Refresh Token"
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                    return Response(
+                        {
+                            "error": str(e)
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserList(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get all users
+        users=User.objects.all()
+
+        # Serialize them
+        serializer = UserListSerializer(users, many=True)
+
+
+        # Return response
+        return Response(serializer.data)
+
+class UpdateUser(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def patch(self, request, id):
+        user = get_object_or_404(User, id=id)
+
+        serializer = UpdateUserSerializer(
+            user.profile,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message" : "User Role Updated Successfully",
+                "user" : serializer.data
+            })
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class DeleteUser(APIView):
+
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def delete(self, request, id):
+
+        user = get_object_or_404(User, id=id)
+
+        if request.user == user:
+            return Response(
+                {
+                    "error": "You cannot delete your own account."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.delete()
+
+        return Response(
+            {
+                "message": "User deleted successfully"
+            },
+            status=status.HTTP_200_OK
+        )  
