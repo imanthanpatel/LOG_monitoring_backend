@@ -6,7 +6,7 @@ from alerts.models import Alert
 class Investigation(models.Model):
 
     STATUS_CHOICES = [
-        ("NOT_ASSIGNED", "Not Assigned"),
+        # ("NOT_ASSIGNED", "Not Assigned"),
         ("ASSIGNED", "Assigned"),
         ("IN_PROGRESS", "In Progress"),
         ("COMPLETED", "Completed"),
@@ -36,7 +36,7 @@ class Investigation(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default="NOT_ASSIGNED"
+        default="ASSIGNED"
     )
 
     summary = models.TextField(blank=True)

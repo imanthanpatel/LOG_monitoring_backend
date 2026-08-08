@@ -1,14 +1,39 @@
 from django.urls import path
+
 from .views import (
     AlertListView,
-    IncidentListView,
     DashboardView,
-    statsView
+    statsView,
+    AlertDetailView,
+    AlertStatusView,
+    AlertAssignView,
 )
 
 urlpatterns = [
     path("alerts/", AlertListView.as_view()),
-    path("incidents/", IncidentListView.as_view()),
-    path("dashboard/", DashboardView.as_view()),
-    path("stats/", statsView),
+
+    path(
+        "alerts/<int:id>/",
+        AlertDetailView.as_view()
+    ),
+
+    path(
+        "alerts/status/",
+        AlertStatusView.as_view()
+    ),
+
+    path(
+        "alerts/<int:id>/assign/",
+        AlertAssignView.as_view()
+    ),
+
+    path(
+        "dashboard/",
+        DashboardView.as_view()
+    ),
+
+    path(
+        "stats/",
+        statsView
+    ),
 ]
