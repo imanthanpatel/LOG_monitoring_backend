@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "detection",
     "api",
     "investigations",
+    "evidence",
 ]
 
 # -----------------------------------------------------

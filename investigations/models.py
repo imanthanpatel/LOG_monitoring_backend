@@ -47,10 +47,15 @@ class Investigation(models.Model):
 
     conclusion = models.TextField(blank=True)
 
-    evidence = models.FileField(
-        upload_to="investigation_upload/",
+    # evidence = models.FileField(
+    #     upload_to="investigation_upload/",
+    #     blank=True,
+    #     null=True,
+    # )
+    file = models.FileField(
+        upload_to="evidence/",
         blank=True,
-        null=True,
+        null=True
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
