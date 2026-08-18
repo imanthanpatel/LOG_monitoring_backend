@@ -1,6 +1,0 @@
-Django
-djangorestframework
-celery
-redis
-mysqlclient
-django-cors-headers

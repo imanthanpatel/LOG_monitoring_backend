@@ -13,6 +13,7 @@ from investigations.serializers import (
     InvestigationUpdateSerializer
 )
 from accounts.permissions import IsInvestigator
+from audit.utils import create_audit_log
 
 
 class MyInvestigationListView(ListAPIView):
@@ -81,6 +82,19 @@ class InvestigationDetailView(APIView):
         if serializer.is_valid():
             serializer.save()
 
+             # Create Audit Log
+            create_audit_log(
+                user=request.user,
+                action="INVESTIGATION_UPDATED",
+                description=(
+                    f"Investigation #{investigation.id} "
+                    f"was updated by {request.user.username}"
+                ),
+                alert_id=investigation.alert.id,
+                investigation_id=investigation.id,
+                ip_address=request.META.get("REMOTE_ADDR")
+            )
+
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
@@ -147,6 +161,15 @@ class CompleteInvestigationView(APIView):
         investigation.status = "COMPLETED"
         investigation.completed_at = timezone.now()
         investigation.save()
+
+        # =====================================
+        # CLOSE RELATED ALERT
+        # =====================================
+
+        alert = investigation.alert
+        alert.status = "CLOSED"
+        alert.assigned = True
+        alert.save()
 
         return Response(
             {

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from alerts.models import Alert
+# from evidence.models import evidence
 
 
 class Investigation(models.Model):
@@ -38,6 +39,11 @@ class Investigation(models.Model):
         choices=STATUS_CHOICES,
         default="ASSIGNED"
     )
+    # file = models.FileField(
+    #     upload_to="investigations/evidence/",
+    #     null=True,
+    #     blank=True
+    # )
 
     summary = models.TextField(blank=True)
 
@@ -52,11 +58,12 @@ class Investigation(models.Model):
     #     blank=True,
     #     null=True,
     # )
-    file = models.FileField(
-        upload_to="evidence/",
-        blank=True,
-        null=True
-    )
+    # evidence = models.ForeignKey(
+    #    evidence,
+    #    on_delete=models.SET_NULL,
+    #    null=True,
+    #    blank=True
+    # )
 
     created_at = models.DateTimeField(auto_now_add=True)
 

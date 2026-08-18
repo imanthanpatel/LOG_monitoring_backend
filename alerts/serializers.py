@@ -9,7 +9,21 @@ class AlertSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Alert
-        fields = '__all__'
+        fields = [
+            "id",
+            "mitre_technique",
+            "rule_name",
+            "severity",
+            "description",
+            "status",
+            "assigned",
+            "timestamp",
+        ]
+
+    def get_assigned(self, obj):
+        return hasattr(obj, "investigation")
+
+
 
 class AlertStatusSerializer(serializers.Serializer):
 
