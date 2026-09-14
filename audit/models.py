@@ -43,6 +43,11 @@ class AuditLog(models.Model):
         null=True,
         blank=True
     )
+    evidence_id = models.IntegerField(
+        null=True,
+        blank=True
+    )
+
 
     created_at = models.DateTimeField(
         auto_now_add=True

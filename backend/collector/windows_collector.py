@@ -16,7 +16,8 @@ LOG_TYPES = [
     "System",
     "Application",
     "Microsoft-Windows-PowerShell/Operational",
-]
+    
+    ]
 
 last_record = {log: 0 for log in LOG_TYPES}
 

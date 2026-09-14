@@ -8,7 +8,8 @@ from rest_framework import status
 from investigations.models import Investigation
 from evidence.models import Evidence
 from evidence.serializers import EvidenceSerializer
-# from audit.utils import create_audit_log
+
+from audit.utils import create_audit_log
 
 
 class InvestigationEvidenceView(APIView):
@@ -70,6 +71,21 @@ class InvestigationEvidenceView(APIView):
             evidence = serializer.save(
                 investigation=investigation,
                 uploaded_by=request.user
+            )
+
+            # Create audit log
+            create_audit_log(
+                user=request.user,
+                action="EVIDENCE_UPLOADED",
+                description=(
+                    f"Evidence #{evidence.id} uploaded to "
+                    f"Investigation #{investigation.id} by "
+                    f"{request.user.username}"
+                ),
+                alert_id=investigation.alert.id,
+                investigation_id=investigation.id,
+                evidence_id=evidence.id,
+                ip_address=request.META.get("REMOTE_ADDR")
             )
 
             return Response(

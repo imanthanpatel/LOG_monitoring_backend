@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
@@ -82,7 +83,7 @@ class InvestigationDetailView(APIView):
         if serializer.is_valid():
             serializer.save()
 
-             # Create Audit Log
+            # Create Audit Log
             create_audit_log(
                 user=request.user,
                 action="INVESTIGATION_UPDATED",
@@ -109,6 +110,7 @@ class InvestigationDetailView(APIView):
 class CompleteInvestigationView(APIView):
     permission_classes = [IsAuthenticated, IsInvestigator]
 
+    @transaction.atomic
     def post(self, request, id):
 
         investigation = get_object_or_404(
@@ -116,7 +118,10 @@ class CompleteInvestigationView(APIView):
             id=id
         )
 
-        # Check investigator
+        # =====================================
+        # CHECK INVESTIGATOR
+        # =====================================
+
         if investigation.investigator != request.user:
             return Response(
                 {
@@ -125,7 +130,10 @@ class CompleteInvestigationView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Already completed?
+        # =====================================
+        # CHECK ALREADY COMPLETED
+        # =====================================
+
         if investigation.status in ["COMPLETED", "CLOSED"]:
             return Response(
                 {
@@ -134,7 +142,10 @@ class CompleteInvestigationView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Required investigation fields
+        # =====================================
+        # CHECK REQUIRED FIELDS
+        # =====================================
+
         required_fields = {
             "summary": investigation.summary,
             "root_cause": investigation.root_cause,
@@ -157,7 +168,10 @@ class CompleteInvestigationView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Complete investigation
+        # =====================================
+        # COMPLETE INVESTIGATION
+        # =====================================
+
         investigation.status = "COMPLETED"
         investigation.completed_at = timezone.now()
         investigation.save()
@@ -167,15 +181,55 @@ class CompleteInvestigationView(APIView):
         # =====================================
 
         alert = investigation.alert
+
         alert.status = "CLOSED"
         alert.assigned = True
         alert.save()
+
+        # =====================================
+        # AUDIT LOG - INVESTIGATION COMPLETED
+        # =====================================
+
+        create_audit_log(
+            user=request.user,
+            action="INVESTIGATION_COMPLETED",
+            description=(
+                f"Investigation #{investigation.id} completed by "
+                f"{request.user.username}. "
+                f"Alert #{alert.id} was closed."
+            ),
+            alert_id=alert.id,
+            investigation_id=investigation.id,
+            ip_address=request.META.get("REMOTE_ADDR")
+        )
+
+        # =====================================
+        # AUDIT LOG - ALERT CLOSED
+        # =====================================
+
+        create_audit_log(
+            user=request.user,
+            action="ALERT_CLOSED",
+            description=(
+                f"Alert #{alert.id} closed after "
+                f"Investigation #{investigation.id} was completed."
+            ),
+            alert_id=alert.id,
+            investigation_id=investigation.id,
+            ip_address=request.META.get("REMOTE_ADDR")
+        )
+
+        # =====================================
+        # SUCCESS RESPONSE
+        # =====================================
 
         return Response(
             {
                 "message": "Investigation completed successfully.",
                 "investigation_id": investigation.id,
-                "status": investigation.status,
+                "investigation_status": investigation.status,
+                "alert_id": alert.id,
+                "alert_status": alert.status,
                 "completed_at": investigation.completed_at
             },
             status=status.HTTP_200_OK
