@@ -15,6 +15,7 @@ from investigations.serializers import (
 )
 from accounts.permissions import IsInvestigator
 from audit.utils import create_audit_log
+from notifications.utils import create_notification
 
 
 class MyInvestigationListView(ListAPIView):
@@ -218,6 +219,24 @@ class CompleteInvestigationView(APIView):
             investigation_id=investigation.id,
             ip_address=request.META.get("REMOTE_ADDR")
         )
+
+        # =====================================
+        # NOTIFY SOC
+        # =====================================
+
+        if investigation.assigned_by:
+            create_notification(
+                recipient=investigation.assigned_by,
+                notification_type="INVESTIGATION_COMPLETED",
+                title="Investigation Completed",
+                message=(
+                    f"Investigation #{investigation.id} has been "
+                    f"completed by {request.user.username}. "
+                    f"Alert #{alert.id} has been closed."
+                ),
+                alert_id=alert.id,
+                investigation_id=investigation.id
+            )
 
         # =====================================
         # SUCCESS RESPONSE

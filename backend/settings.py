@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "investigations",
     "evidence",
     "audit",
+    "notifications",
 ]
 
 # -----------------------------------------------------
