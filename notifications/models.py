@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 class Notification(models.Model):
 
     TYPE_CHOICES = [
+        ("ALERT_ASSIGNED", "Alert Assigned"),
         ("INVESTIGATION_COMPLETED", "Investigation Completed"),
         ("ALERT_CLOSED", "Alert Closed"),
     ]

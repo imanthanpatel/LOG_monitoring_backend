@@ -1,223 +1,373 @@
-# 🛡️ SentinelSIEM — Lightweight Security Information & Event Monitoring Engine
+# SentinelSIEM Backend API Documentation
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![Django](https://img.shields.io/badge/Django-4.x-green.svg)
-![DRF](https://img.shields.io/badge/DRF-Enabled-red.svg)
-![MITRE ATT&CK](https://img.shields.io/badge/MITRE-ATT%26CK-purple.svg)
-![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
-![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)
+This project is a Django REST API for a security monitoring and investigation platform. It supports log ingestion, alert management, rule-based detection, MITRE ATT&CK mapping, investigations, evidence handling, audits, and notifications.
 
----
+## 1. Base URL
 
-## 📌 Overview
+- Local development: http://127.0.0.1:8000
+- API root: http://127.0.0.1:8000/api/
 
-**SentinelSIEM** is a lightweight, modular **Security Information and Event Management (SIEM)** system built using Django.
+## 2. Authentication
 
-It is designed to simulate **real-world SOC detection pipelines**, where logs are ingested, analyzed using behavioral rules, and mapped to **MITRE ATT&CK techniques** to generate actionable security alerts.
+Most endpoints require JWT authentication.
 
-This project demonstrates how enterprise SIEM systems like Splunk or Elastic SIEM work internally — but in a simplified, customizable architecture.
+- Login returns: access token and refresh token
+- Send the token in the request header:
 
----
-
-## 🎯 Objectives
-
-- Simulate real-world SOC detection workflows
-- Build a rule-based security detection engine
-- Map attacks to MITRE ATT&CK framework
-- Perform time-window based log correlation
-- Generate structured alerts & incidents
-- Enable cybersecurity learning & experimentation
-
----
-
-## 🏗️ System Architecture
-                ┌────────────────────────┐
-                │   Log Sources          │
-                │ (Windows / Apps / API) │
-                └──────────┬─────────────┘
-                           │
-                           ▼
-                ┌────────────────────────┐
-                │  Ingestion Layer       │
-                │  Django REST API       │
-                └──────────┬─────────────┘
-                           │
-                           ▼
-                ┌────────────────────────┐
-                │   Log Storage DB       │
-                │ (SQLite / PostgreSQL)   │
-                └──────────┬─────────────┘
-                           │
-                           ▼
-                ┌────────────────────────┐
-                │ Detection Engine       │
-                │ (Rule-Based System)    │
-                └──────────┬─────────────┘
-                           │
-                           ▼
-                ┌────────────────────────┐
-                │ MITRE ATT&CK Mapper    │
-                └──────────┬─────────────┘
-                           │
-                           ▼
-                ┌────────────────────────┐
-                │ Alert & Incident Layer │
-                └──────────┬─────────────┘
-                           │
-                           ▼
-                ┌────────────────────────┐
-                │ API / Dashboard Layer  │
-                └────────────────────────┘
-                
----
-
-## ⚙️ Core Features
-
-### 📥 Log Ingestion
-- REST API-based log collection
-- Supports Windows Event-like structured logs
-- Flexible JSON ingestion format
-
-### 🧠 Detection Engine
-- Rule-based security detection system
-- Time-window correlation (5–10 min behavioral tracking)
-- Stateful detection using `DetectionState`
-
-### 🚨 Alert System
-- Deduplication of alerts
-- Severity classification (Low / Medium / High / Critical)
-- Incident creation pipeline
-
-### 🧩 MITRE ATT&CK Mapping
-- Automatic mapping of detections to ATT&CK IDs
-- Supports tactic + technique alignment
-- Enhances threat context understanding
-
----
-
-## 🧠 Detection Coverage
-
-### 🔐 Authentication Attacks
-| Technique | MITRE ID |
-|-----------|----------|
-| Brute Force Detection | T1110 |
-| Brute Force Success | T1110.001 |
-| RDP Login | T1021.001 |
-| Off-hours Login | T1078 |
-
----
-
-### 💻 Execution Attacks
-| Technique | MITRE ID |
-|-----------|----------|
-| PowerShell Execution | T1059.001 |
-| Suspicious PowerShell | T1059.001 |
-| Suspicious Process Creation | T1059 |
-
----
-
-### 🛠 Persistence & Privilege Abuse
-| Technique | MITRE ID |
-|-----------|----------|
-| Scheduled Task Creation | T1053.005 |
-| Service Installation | T1543 |
-| New User Creation | T1136 |
-| User Deletion | T1531 |
-
----
-
-## 🔄 Detection Flow
-
-1. Logs are ingested via `/api/ingest/`
-2. Stored in structured database
-3. Detection engine scans only new logs
-4. Rule engine applies behavioral logic
-5. Matching patterns trigger alerts
-6. MITRE ATT&CK mapping enriches alerts
-7. Alerts are exposed via `/api/alerts/`
-
----
-
-## 🧪 Installation & Setup
-
-### 1️⃣ Clone Repository
-```bash
-git clone https://github.com/yourusername/sentinelsiem.git
-cd sentinelsiem
-```
-### 2️⃣ Create Virtual Environment
-```
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
-### 3️⃣ Install Dependencies
-```
-pip install -r requirements.txt
-```
-### 4️⃣ Run Migrations
-```
-python manage.py migrate
-```
-### 5️⃣ Start Server
-```
-python manage.py runserver
-```
-### 6️⃣ Run Detection Engine
-```
-python manage.py run_detection
-```
-### 🧪 Testing Attack Simulation(This project includes a built-in attack simulator.)
-```
-python test\test_siem.py
-
-This script simulates:
-
-Brute force attacks
-PowerShell exploitation
-Suspicious process execution
-Privilege escalation attempts
-Persistence mechanisms
+```http
+Authorization: Bearer <access_token>
 ```
 
+Public endpoints:
+- POST /api/auth/register/
+- POST /api/auth/login/
 
-### 📊 Example Alert Output
-```
+Protected endpoints require valid authentication.
+
+## 3. Authentication APIs
+
+### Register user
+
+- Method: POST
+- URL: /api/auth/register/
+- Description: Create a new user account.
+- Body example:
+
+```json
 {
-  "id": 24,
-  "rule_name": "Brute Force Detection",
-  "severity": "High",
-  "description": "12 failed logins in 5 minutes. Targets: admin",
-  "mitre_technique": {
-    "technique_id": "T1110",
-    "name": "Brute Force"
-  },
-  "timestamp": "2026-06-26T10:00:00Z"
+  "username": "analyst1",
+  "email": "analyst1@example.com",
+  "password": "StrongPass123!",
+  "role": "SOC"
 }
 ```
-### 🧰 Tech Stac
-```
-| Layer          | Technology                  |
-| -------------- | --------------------------- |
-| Backend        | Django                      |
-| API Layer      | Django REST Framework       |
-| Database       | SQLite / PostgreSQL         |
-| Language       | Python                      |
-| Security Model | MITRE ATT&CK Framework      |
-| Architecture   | Rule-based Detection Engine |
 
-```
-### 🎯Real-World Use Cases
-```
-SOC analyst training simulation
-Cybersecurity lab environment
-MITRE ATT&CK learning platform
-SIEM architecture education
-Blue-team detection engineering practice
+### Login
 
+- Method: POST
+- URL: /api/auth/login/
+- Description: Authenticate a user and receive JWT tokens.
+- Response example:
+
+```json
+{
+  "message": "Login Successful",
+  "username": "analyst1",
+  "access": "<jwt_access_token>",
+  "refresh": "<jwt_refresh_token>",
+  "role": "SOC"
+}
 ```
-### 🚀 Future Roadmap
+
+### Logout
+
+- Method: POST
+- URL: /api/auth/logout/
+- Description: Blacklist the refresh token.
+- Body:
+
+```json
+{
+  "refresh": "<refresh_token>"
+}
 ```
+
+### Current user
+
+- Method: GET
+- URL: /api/auth/me/
+- Description: Returns information about the logged-in user.
+
+## 4. User Management APIs
+
+### Get all users
+
+- Method: GET
+- URL: /api/user-list/
+- Description: Returns all users.
+- Requires: Authentication
+
+### Update user profile/role
+
+- Method: PATCH
+- URL: /api/users/<id>/
+- Description: Updates a user's profile information or assigned role.
+- Requires: Authentication + Admin permission
+
+### Delete user
+
+- Method: DELETE
+- URL: /api/users/<id>/delete
+- Description: Deletes a user account.
+- Requires: Authentication + Admin permission
+- Note: A user cannot delete their own account.
+
+## 5. Dashboard and Alert Summary APIs
+
+### Dashboard statistics
+
+- Method: GET
+- URL: /api/dashboard/
+- Description: Returns general SOC dashboard totals.
+- Response includes:
+  - total_logs
+  - total_alerts
+  - active_rules
+  - critical_alerts
+  - high_alerts
+  - medium_alerts
+  - low_alerts
+  - total_users
+  - failed_logins
+
+### Alert summary stats
+
+- Method: GET
+- URL: /api/stats/
+- Description: Returns aggregate counts for alert severities.
+
+### List alerts
+
+- Method: GET
+- URL: /api/alerts/
+- Description: Returns all alert records.
+
+### Alert detail
+
+- Method: GET
+- URL: /api/alerts/<id>/
+- Description: Returns one specific alert.
+- Requires: Authentication
+
+### Update alert status
+
+- Method: PUT
+- URL: /api/alerts/status/
+- Description: Updates the status of an alert.
+- Body example:
+
+```json
+{
+  "id": 12,
+  "status": "OPEN"
+}
+```
+
+### Assign alert to investigator
+
+- Method: POST
+- URL: /api/alerts/<id>/assign/
+- Description: Assigns an alert to an investigator and creates an investigation record.
+- Requires: Authentication
+- Body example:
+
+```json
+{
+  "investigator": 7
+}
+```
+
+## 6. Log Ingestion APIs
+
+### Ingest log
+
+- Method: POST
+- URL: /api/ingest/
+- Description: Creates a log record from a JSON payload.
+- Body example:
+
+```json
+{
+  "event_id": 4625,
+  "source": "windows",
+  "log_type": "authentication",
+  "message": "Failed login attempt",
+  "computer": "DC01",
+  "ip_address": "10.0.0.22",
+  "username": "admin",
+  "time_generated": "2026-09-23T10:30:00Z"
+}
+```
+
+### List logs
+
+- Method: GET
+- URL: /api/logs/
+- Description: Returns log records with optional filters.
+- Query params:
+  - ordering=
+  - event_id=
+  - source=
+  - log_type=
+  - username=
+  - computer=
+  - ip_address=
+- Example:
+
+```http
+GET /api/logs/?event_id=4625&ordering=-time_generated
+```
+
+## 7. Detection and Rule APIs
+
+These endpoints are served via a DRF router.
+
+### Rules collection
+
+- GET /api/rules/
+- POST /api/rules/
+- GET /api/rules/<id>/
+- PUT /api/rules/<id>/
+- PATCH /api/rules/<id>/
+- DELETE /api/rules/<id>/
+
+### Rule statistics
+
+- Method: GET
+- URL: /api/rules/stats/
+- Description: Returns total enabled and disabled rules.
+
+### MITRE techniques
+
+- GET /api/mitre/
+- GET /api/mitre/<id>/
+
+### MITRE coverage
+
+- Method: GET
+- URL: /api/mitre/coverage/
+- Description: Returns rule-to-MITRE mapping coverage percentage.
+
+### MITRE statistics
+
+- Method: GET
+- URL: /api/mitre/stats/
+- Description: Returns total technique and tactic counts.
+
+## 8. Investigation APIs
+
+### My investigations
+
+- Method: GET
+- URL: /api/investigations/me/
+- Description: Returns all investigations assigned to the authenticated investigator.
+- Requires: Authentication + Investigator role
+
+### Completed investigation reports
+
+- Method: GET
+- URL: /api/investigations/completed/
+- Description: Returns completed and closed investigation reports for the SOC dashboard.
+- Requires: Authentication + ADMIN or SOC role
+- Includes: summary, root cause, recommendations, conclusion, evidence, investigator, and completion time.
+
+### Investigation detail
+
+- Method: GET
+- URL: /api/investigations/<id>/
+- Description: Fetches one assigned investigation.
+- ADMIN and SOC users can also view completed investigation reports.
+
+### Update investigation
+
+- Method: PATCH
+- URL: /api/investigations/<id>/
+- Description: Updates investigation fields such as summary, root cause, recommendations, or conclusion.
+
+### Complete investigation
+
+- Method: POST
+- URL: /api/investigations/<id>/complete/
+- Description: Marks the investigation as completed and closes the associated alert.
+- Requires all required fields to be filled before submission.
+
+### Investigation evidence
+
+- Method: GET
+- URL: /api/investigations/<id>/evidence/
+- Description: Lists evidence related to an investigation.
+
+- Method: POST
+- URL: /api/investigations/<id>/evidence/
+- Description: Uploads evidence for an investigation.
+
+## 9. Evidence APIs
+
+### Upload or list investigation evidence
+
+- GET /api/investigations/<id>/evidence/
+- POST /api/investigations/<id>/evidence/
+
+Evidence is tied to an investigation and includes metadata such as the uploader and upload date.
+
+## 10. Audit Log API
+
+### Get audit logs
+
+- Method: GET
+- URL: /api/audit-logs/
+- Description: Returns audit entries for system actions.
+- Requires: Authentication
+
+## 11. Notification APIs
+
+### My notifications
+
+- Method: GET
+- URL: /api/notifications/
+- Description: Returns notifications for the logged-in user.
+
+### Mark notification as read
+
+- Method: PATCH
+- URL: /api/notifications/<id>/read/
+- Description: Marks a user notification as read.
+
+## 12. Typical API Flow
+
+1. Register or log in via /api/auth/register/ or /api/auth/login/
+2. Use the returned access token as a bearer token in the Authorization header
+3. Submit logs to /api/ingest/
+4. Read logs at /api/logs/
+5. Review alert summaries at /api/dashboard/ or /api/stats/
+6. Assign alerts to investigators via /api/alerts/<id>/assign/
+7. Investigate assigned alerts through /api/investigations/me/
+8. Upload evidence under /api/investigations/<id>/evidence/
+9. Close an investigation using /api/investigations/<id>/complete/
+
+## 13. Notes
+
+- This backend uses Django REST Framework with JWT-based authentication.
+- Authentication is required for most operational APIs.
+- User roles such as ADMIN, SOC, INVESTIGATOR, and VIEWER are enforced by custom permissions.
+- The detection engine and alerting layer are rule-driven and MITRE-mapped.
+
+## 14. Quick Start
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate  # Windows
+pip install -r requriment.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+Then open:
+- http://127.0.0.1:8000/api/
+
+## 15. Summary
+
+This API exposes the full workflow of a lightweight SIEM platform:
+- ingest logs
+- detect suspicious activity
+- generate alerts
+- assign incidents for investigation
+- attach evidence
+- audit every action
+- notify users
+
+If you want, I can also generate a separate Swagger-style OpenAPI document or a Postman collection for these endpoints.
 🔴 Real-time streaming detection (Kafka/WebSockets)
 🤖 AI-based anomaly detection engine
 📊 SOC dashboard (React / Next.js)

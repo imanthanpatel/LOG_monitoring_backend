@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     MyInvestigationListView,
+    CompletedInvestigationListView,
     InvestigationDetailView,
     CompleteInvestigationView,
 )
@@ -12,6 +13,12 @@ urlpatterns = [
         "investigations/me/",
         MyInvestigationListView.as_view(),
         name="my-investigations"
+    ),
+
+    path(
+        "investigations/completed/",
+        CompletedInvestigationListView.as_view(),
+        name="completed-investigations"
     ),
 
     path(

@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
@@ -13,7 +14,7 @@ from investigations.serializers import (
     InvestigationSerializer,
     InvestigationUpdateSerializer
 )
-from accounts.permissions import IsInvestigator
+from accounts.permissions import IsInvestigator, IsAdminOrSOC
 from audit.utils import create_audit_log
 from notifications.utils import create_notification
 
@@ -28,8 +29,20 @@ class MyInvestigationListView(ListAPIView):
         ).order_by("-created_at")
 
 
+class CompletedInvestigationListView(ListAPIView):
+    permission_classes = [IsAuthenticated, IsAdminOrSOC]
+    serializer_class = InvestigationSerializer
+
+    def get_queryset(self):
+        return Investigation.objects.filter(
+            Q(status__iexact="COMPLETED") | Q(status__iexact="CLOSED")
+        ).select_related(
+            "alert", "investigator", "assigned_by"
+        ).order_by("-completed_at", "-updated_at")
+
+
 class InvestigationDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsInvestigator]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
         investigation = get_object_or_404(
@@ -37,8 +50,9 @@ class InvestigationDetailView(APIView):
             id=id
         )
 
-        # Investigator can only see their own investigation
-        if investigation.investigator != request.user:
+        is_owner = investigation.investigator == request.user
+        is_soc_or_admin = request.user.profile.role in ["SOC", "ADMIN"]
+        if not is_owner and not is_soc_or_admin:
             return Response(
                 {
                     "error": "You are not assigned to this investigation."

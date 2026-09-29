@@ -23,8 +23,9 @@ class InvestigationEvidenceView(APIView):
             id=id
         )
 
-        # Only the assigned investigator can access
-        if investigation.investigator != request.user:
+        # Investigators can access their own evidence; SOC/Admin can review it.
+        can_review = request.user.profile.role in ["SOC", "ADMIN"]
+        if investigation.investigator != request.user and not can_review:
 
             return Response(
                 {

@@ -21,6 +21,7 @@ from detection.models import RuleConfig
 from investigations.models import Investigation
 
 from audit.utils import create_audit_log
+from notifications.utils import create_notification
 
 
 # ==========================================
@@ -252,6 +253,18 @@ class AlertAssignView(APIView):
         alert.status = "ASSIGNED"
         alert.assigned = True
         alert.save()
+
+        create_notification(
+            recipient=investigator,
+            notification_type="ALERT_ASSIGNED",
+            title="New Alert Assigned",
+            message=(
+                f"Alert #{alert.id} has been assigned to you by "
+                f"{request.user.username}."
+            ),
+            alert_id=alert.id,
+            investigation_id=investigation.id
+        )
 
         # ----------------------------------
         # 8. Create Audit Log

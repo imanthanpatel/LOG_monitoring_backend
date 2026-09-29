@@ -146,10 +146,15 @@ class UpdateUser(APIView):
         )
 
         if serializer.is_valid():
-            serializer.save()
+            profile = serializer.save()
             return Response({
                 "message" : "User Role Updated Successfully",
-                "user" : serializer.data
+                "user" : {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": profile.role,
+                }
             })
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
